@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Leaderboard from './components/Leaderboard.jsx'
 import LiveMatches from './components/LiveMatches.jsx'
 import PredictionCompare from './components/PredictionCompare.jsx'
+import { fetchLiveGames, predictionsUrl } from './utils/api.js'
 import { scorePlayer, sortLeaderboard } from './utils/scoring.js'
 import { normalizeTeam } from './utils/teams.js'
 
@@ -26,8 +27,11 @@ export default function App() {
   const [lastUpdated, setLastUpdated] = useState(null)
 
   useEffect(() => {
-    fetch('/data/predictions.json')
-      .then((res) => res.json())
+    fetch(predictionsUrl())
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load predictions')
+        return res.json()
+      })
       .then(setPredictions)
       .catch(() => setError('Could not load predictions.'))
   }, [])
@@ -37,9 +41,13 @@ export default function App() {
 
     async function loadGames() {
       try {
-        const res = await fetch('/api/games')
-        if (!res.ok) throw new Error('Failed to fetch live games')
-        const data = await res.json()
+        const data = import.meta.env.DEV
+          ? await fetch('/api/games').then((res) => {
+              if (!res.ok) throw new Error('Failed to fetch live games')
+              return res.json()
+            })
+          : await fetchLiveGames()
+
         if (active) {
           setGames(normalizeGames(data))
           setLastUpdated(new Date())

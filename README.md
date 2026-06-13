@@ -39,3 +39,11 @@ npm run parse
 npm run build
 npm run preview
 ```
+
+## GitHub Pages
+
+The site is deployed automatically on push to `main` via GitHub Actions.
+
+Live URL: https://danielonwudinanti.github.io/world-cup-prediction-leaderboard/
+
+In your repo settings, set **Pages → Build and deployment → Source** to **GitHub Actions** (not “Deploy from a branch”).

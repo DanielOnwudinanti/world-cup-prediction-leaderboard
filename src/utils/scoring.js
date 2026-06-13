@@ -11,18 +11,37 @@ function result(homeScore, awayScore) {
   return 'D'
 }
 
-export function predictedResult(prediction) {
-  return result(prediction.homeScore, prediction.awayScore)
+function alignPredictionScores(prediction, gameHome, gameAway) {
+  const predHome = normalizeTeam(prediction.home)
+  const predAway = normalizeTeam(prediction.away)
+  const gHome = normalizeTeam(gameHome)
+  const gAway = normalizeTeam(gameAway)
+
+  if (predHome === gHome && predAway === gAway) {
+    return { homeScore: prediction.homeScore, awayScore: prediction.awayScore }
+  }
+  if (predHome === gAway && predAway === gHome) {
+    return { homeScore: prediction.awayScore, awayScore: prediction.homeScore }
+  }
+  return { homeScore: prediction.homeScore, awayScore: prediction.awayScore }
+}
+
+export function predictedResult(prediction, gameHome, gameAway) {
+  const { homeScore, awayScore } =
+    gameHome != null && gameAway != null
+      ? alignPredictionScores(prediction, gameHome, gameAway)
+      : { homeScore: prediction.homeScore, awayScore: prediction.awayScore }
+  return result(homeScore, awayScore)
 }
 
 export function formatPredictionOutcome(prediction, home, away) {
-  const r = predictedResult(prediction)
+  const r = predictedResult(prediction, home, away)
   if (r === 'H') return `${home} win`
   if (r === 'A') return `${away} win`
   return 'Draw'
 }
 
-function scoreMatch(prediction, actualHome, actualAway, status) {
+function scoreMatch(prediction, gameHome, gameAway, actualHome, actualAway, status) {
   const isFinished = status === 'finished'
   const isLive = status === 'live'
 
@@ -30,7 +49,8 @@ function scoreMatch(prediction, actualHome, actualAway, status) {
     return { confirmed: 0, projected: 0, correctResult: false }
   }
 
-  const predResult = result(prediction.homeScore, prediction.awayScore)
+  const { homeScore, awayScore } = alignPredictionScores(prediction, gameHome, gameAway)
+  const predResult = result(homeScore, awayScore)
   const actualResult = result(actualHome, actualAway)
   const correct = predResult === actualResult
 
@@ -72,7 +92,7 @@ export function scorePlayer(player, games) {
     const actualHome = parseInt(game.home_score, 10) || 0
     const actualAway = parseInt(game.away_score, 10) || 0
 
-    const scored = scoreMatch(prediction, actualHome, actualAway, status)
+    const scored = scoreMatch(prediction, home, away, actualHome, actualAway, status)
     confirmedPoints += scored.confirmed
     projectedPoints += scored.projected
 

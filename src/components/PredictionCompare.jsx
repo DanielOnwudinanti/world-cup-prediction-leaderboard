@@ -19,7 +19,7 @@ function pickStatus(prediction, game) {
   const actualHome = parseInt(game.home_score, 10) || 0
   const actualAway = parseInt(game.away_score, 10) || 0
   const actual = actualHome > actualAway ? 'H' : actualHome < actualAway ? 'A' : 'D'
-  const predicted = predictedResult(prediction)
+  const predicted = predictedResult(prediction, game.home, game.away)
 
   return predicted === actual ? 'correct' : 'wrong'
 }
